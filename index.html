@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Dungeons - Ancient Hunt Hesaplayıcı</title>
+    <!-- Modern Tasarım için Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Oyun Temasına Uygun Google Yazı Tipleri -->
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Genel Tema: Zindan / Obsidian Vibe */
+        body { 
+            background-color: #121212; 
+            background-image: radial-gradient(circle at top center, #2d233e 0%, #0a0a0c 80%); 
+            color: #e2e8f0; 
+            font-family: 'Ubuntu', sans-serif; 
+            min-height: 100vh;
+        }
+        
+        /* Başlık Fontu */
+        .title-font { font-family: 'Teko', sans-serif; letter-spacing: 1.5px; }
+
+        /* Minecraft Paneli (Koyu Yarı Saydam Taş) */
+        .mc-panel { 
+            background: rgba(20, 20, 24, 0.9); 
+            border: 2px solid #3f3f4a; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.6); 
+            border-radius: 12px; 
+            backdrop-filter: blur(8px); 
+        }
+
+        /* 3D Minecraft Butonları */
+        .mc-btn { 
+            background: #2a2a35; 
+            border: 2px solid #4a4a5a; 
+            border-bottom-width: 4px; 
+            color: #fff; 
+            border-radius: 8px;
+            text-shadow: 1px 1px 0 #000; 
+            transition: all 0.1s; 
+            cursor: pointer;
+        }
+        .mc-btn:active { border-bottom-width: 2px; transform: translateY(2px); }
+        .mc-btn:hover { background: #3a3a4a; border-color: #5a5a6a; }
+        
+        .mc-btn-primary { 
+            background: #166534; 
+            border-color: #22c55e; 
+            border-bottom-width: 4px;
+            color: #fff; 
+            border-radius: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.1s;
+        }
+        .mc-btn-primary:active { border-bottom-width: 2px; transform: translateY(2px); }
+        .mc-btn-primary:hover { background: #15803d; border-color: #4ade80; }
+
+        /* Oyun İçi Arama Kutusu */
+        .mc-input { 
+            background: rgba(0,0,0,0.6); 
+            border: 2px solid #444; 
+            color: #fff; 
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.8); 
+            transition: all 0.2s;
+        }
+        .mc-input:focus { border-color: #f59e0b; outline: none; box-shadow: inset 0 4px 6px rgba(0,0,0,0.8), 0 0 10px rgba(245, 158, 11, 0.3); }
+
+        /* Parlayan Rün Taşları */
+        .rune-badge { 
+            background: #1a1a1a; 
+            border: 2px solid #444; 
+            color: #fbbf24; 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; 
+            font-weight: bold; 
+            padding: 2px 10px; 
+            border-radius: 6px; 
+            box-shadow: inset 0 0 8px #000; 
+            text-shadow: 0 0 5px rgba(251,191,36,0.6); 
+        }
+
+        /* En İyi Seçenek Madalyası (Unique Drop Parıltısı) */
+        .best-badge { 
+            background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%); 
+            color: #fff; 
+            text-shadow: 1px 1px 0 #78350f; 
+            border: 2px solid #fffbeb; 
+            box-shadow: 0 0 15px rgba(245,158,11,0.6); 
+            font-family: 'Ubuntu', sans-serif;
+            text-transform: uppercase;
+        }
+
+        /* Eşya Satırları */
+        .item-row { 
+            border-left: 4px solid #4b5563; 
+            padding-left: 12px; 
+            margin-bottom: 8px; 
+            background: rgba(255,255,255,0.02); 
+            padding-top: 10px; 
+            padding-bottom: 10px; 
+            border-radius: 0 8px 8px 0;
+            transition: background 0.2s;
+        }
+        .item-row:hover { background: rgba(255,255,255,0.05); border-left-color: #f59e0b; }
+
+        /* Zindan Sonuç Kartları */
+        .result-card { background: rgba(0,0,0,0.4); border: 2px solid #333; border-radius: 10px; padding: 20px; position: relative; margin-bottom: 20px; }
+        .result-card.best { border-color: #b45309; box-shadow: 0 0 20px rgba(180, 83, 9, 0.2); }
+        
+        /* Özel Kaydırma Çubuğu */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #0a0a0c; }
+        ::-webkit-scrollbar-thumb { background: #3f3f4a; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5a5a6a; }
+        
+        /* Yükleme Animasyonu */
+        .loader { border: 4px solid rgba(255,255,255,0.1); width: 44px; height: 44px; border-radius: 50%; border-left-color: #f59e0b; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col items-center">
+
+    <div class="w-full max-w-4xl mc-panel p-6 md:p-8 relative">
+        
+        <!-- Başlık -->
+        <div class="text-center mb-8 border-b border-gray-700 pb-6">
+            <h1 class="text-5xl md:text-6xl title-font text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-lg mb-1">
+                ⚔️ ANCIENT HUNT
+            </h1>
+            <p class="text-gray-400 text-sm md:text-base tracking-wide uppercase font-bold">Rün ve Eşya Asistanı</p>
+        </div>
+
+        <!-- Yükleme Ekranı -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center py-16 text-center">
+            <div class="loader mb-6 mx-auto" id="loader-spinner"></div>
+            <p class="text-yellow-500 font-bold animate-pulse text-lg" id="loading-text">Kayıtlar İnceleniyor...</p>
+            <p class="text-gray-500 text-sm mt-2">Zindan veritabanına bağlanılıyor</p>
+        </div>
+
+        <!-- Ana İçerik -->
+        <div id="main-content" class="hidden">
+            
+            <!-- Arama Kutusu -->
+            <div class="mb-10 bg-black/30 p-6 rounded-xl border border-gray-800">
+                <label class="block text-gray-300 text-sm font-bold mb-3 uppercase tracking-wider" for="search-input">
+                    🔍 Aranacak Eşya Veya Boss:
+                </label>
+                <div class="flex gap-3">
+                    <input type="text" id="search-input" placeholder="Örn: Fighter's Bindings, Axe, Weaver (Tümü için boş bırakın)" 
+                           class="w-full mc-input rounded-lg py-3 px-4 text-lg">
+                    <button onclick="performSearch()" class="mc-btn-primary py-3 px-8 text-lg">
+                        ARA
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mob Listesi -->
+            <div id="mob-list-container" class="hidden mb-10">
+                <h2 class="text-2xl title-font text-gray-200 mb-4 border-b border-gray-700 pb-2">🎯 HEDEF BOSS'LAR</h2>
+                <div id="mob-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Mob butonları JS ile eklenecek -->
+                </div>
+            </div>
+
+            <!-- Sonuç Paneli -->
+            <div id="results-container" class="hidden mt-8 border-t border-gray-700 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-black/40 p-4 border border-gray-700 rounded-xl">
+                    <div>
+                        <h2 id="target-boss-name" class="text-3xl title-font text-white"></h2>
+                        <p class="text-gray-400 text-sm">Çağırmak için gereken rün kombinasyonları hesaplandı.</p>
+                    </div>
+                    <div class="bg-gray-900 px-5 py-3 rounded-lg border border-gray-700 shadow-inner flex items-center">
+                        <span class="text-gray-400 text-sm font-bold uppercase tracking-wider mr-3">Hedef:</span>
+                        <span id="target-runes" class="font-mono text-yellow-400 font-bold text-xl tracking-widest text-shadow"></span>
+                    </div>
+                </div>
+
+                <!-- Unique Sonuçlar -->
+                <div class="mb-12">
+                    <h3 class="text-2xl title-font text-purple-400 mb-4 flex items-center border-b border-purple-900/50 pb-2">
+                        <span class="mr-2">🌟</span> UNIQUE EŞYALAR DAHİL KOMBİNASYONLAR
+                    </h3>
+                    <div id="unique-results"></div>
+                </div>
+
+                <!-- Normal Sonuçlar -->
+                <div>
+                    <h3 class="text-2xl title-font text-emerald-400 mb-4 flex items-center border-b border-emerald-900/50 pb-2">
+                        <span class="mr-2">📦</span> SADECE NORMAL EŞYALAR İLE
+                    </h3>
+                    <div id="normal-results"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // SABİT GOOGLE SHEETS ID
+        // (Kullanıcı tarafından verilen kalıcı ID)
+        // ==========================================
+        const GOOGLE_SHEETS_ID = "1eLoX0tqOPJJlTZdSQ9H5-ZH5_8Pn-zZVYZpiZjTZGi0";
+        // ==========================================
+
+        const RUNE_TYPES = ['U', 'C', 'O', 'S', 'R', 'I', 'P', 'T', 'A'];
+        
+        let database = { Melee: [], Ranged: [], Armor: [], Artifacts: [], Mobs: [] };
+        let globalMobsList = [];
+
+        window.onload = async () => {
+            try {
+                await fetchAllData();
+                processMobs();
+                
+                document.getElementById("loading-screen").classList.add("hidden");
+                document.getElementById("main-content").classList.remove("hidden");
+                
+                document.getElementById("search-input").addEventListener("keypress", function(event) {
+                    if (event.key === "Enter") performSearch();
+                });
+            } catch (error) {
+                console.error(error);
+                showError("Veritabanına ulaşılamadı.", error.message);
+            }
+        };
+
+        function showError(title, detail) {
+            document.getElementById("loader-spinner").style.display = "none";
+            const loadingText = document.getElementById("loading-text");
+            loadingText.classList.replace("text-yellow-500", "text-red-500");
+            loadingText.classList.remove("animate-pulse");
+            loadingText.innerHTML = `
+                <div class="text-2xl title-font mb-2">❌ ${title}</div>
+                <div class="text-sm font-sans text-red-300 bg-red-900/30 p-4 rounded border border-red-800 inline-block text-left mt-2">
+                    <b>Hata Detayı:</b> ${detail}<br>
+                </div>
+            `;
+        }
+
+        // --- JSONP Veri Çekme Motoru ---
+        function fetchSheetDataJSONP(sheetName) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'gviz_' + sheetName.replace(/[^a-zA-Z0-9]/g, '') + '_' + Math.random().toString(36).substring(7);
+                const encodedSheetName = encodeURIComponent(sheetName);
+                const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?sheet=${encodedSheetName}&headers=1&tqx=responseHandler:${callbackName}`;
+
+                window[callbackName] = function(data) {
+                    delete window[callbackName];
+                    const scriptEl = document.getElementById(callbackName);
+                    if (scriptEl) scriptEl.remove();
+
+                    if (data.status === 'error') {
+                        reject(new Error(data.errors[0].message || "Bilinmeyen Google API Hatası"));
+                        return;
+                    }
+
+                    try {
+                        const cols = data.table.cols.map(c => c ? c.label : '');
+                        const rows = data.table.rows.map(r => {
+                            let rowObj = {};
+                            if (r && r.c) {
+                                r.c.forEach((cell, i) => {
+                                    if (cols[i]) {
+                                        let val = "";
+                                        if (cell !== null && cell !== undefined) {
+                                            val = cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : "");
+                                        }
+                                        rowObj[cols[i]] = String(val);
+                                    }
+                                });
+                            }
+                            return rowObj;
+                        });
+                        resolve(rows);
+                    } catch (err) {
+                        reject(new Error("Veri ayrıştırma hatası: " + err.message));
+                    }
+                };
+
+                const script = document.createElement('script');
+                script.id = callbackName;
+                script.src = url;
+                script.onerror = () => {
+                    delete window[callbackName];
+                    script.remove();
+                    reject(new Error(`"${sheetName}" sayfasına ulaşılamadı. Tablonun herkese açık olduğundan emin olun.`));
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        async function fetchAllData() {
+            const sheets = {
+                'Melee': 'Melee',
+                'Ranged': 'Ranged Runes',
+                'Armor': 'Armor Runes',
+                'Artifacts': 'Artifact Runes',
+                'Mobs': 'Ancient Mobs'
+            };
+
+            const promises = Object.entries(sheets).map(async ([key, sheetName]) => {
+                database[key] = await fetchSheetDataJSONP(sheetName);
+            });
+
+            await Promise.all(promises);
+        }
+
+        function processMobs() {
+            globalMobsList = [];
+            for (let row of database['Mobs']) {
+                if (row['Ancient'] && row['Runes']) {
+                    globalMobsList.push({
+                        Ancient: String(row['Ancient']).trim(),
+                        Runes: String(row['Runes']).trim().toUpperCase(),
+                        Drops: String(row['Possible Drops'] || '').trim()
+                    });
+                }
+            }
+        }
+
+        function performSearch() {
+            const searchText = document.getElementById("search-input").value.trim().toLowerCase();
+            const listContainer = document.getElementById("mob-list-container");
+            const mobListEl = document.getElementById("mob-list");
+            const resultsContainer = document.getElementById("results-container");
+            
+            resultsContainer.classList.add("hidden");
+            mobListEl.innerHTML = "";
+
+            let foundMobs = globalMobsList.filter(mob => {
+                return mob.Drops.toLowerCase().includes(searchText) || mob.Ancient.toLowerCase().includes(searchText);
+            });
+
+            if (foundMobs.length === 0) {
+                mobListEl.innerHTML = `<div class="col-span-2 p-5 bg-red-900/20 border border-red-800 rounded-lg text-red-300 text-center font-bold text-lg shadow-inner">❌ '${searchText}' kelimesini içeren eşya veya boss bulunamadı.</div>`;
+            } else {
+                foundMobs.forEach(mob => {
+                    const btn = document.createElement("button");
+                    btn.className = "mc-btn flex justify-between items-center p-5 text-left group";
+                    btn.onclick = () => calculateForMob(mob);
+                    
+                    btn.innerHTML = `
+                        <span class="font-bold text-gray-200 group-hover:text-white text-lg">${mob.Ancient}</span>
+                        <span class="rune-badge text-sm">${mob.Runes}</span>
+                    `;
+                    mobListEl.appendChild(btn);
+                });
+            }
+            
+            listContainer.classList.remove("hidden");
+        }
+
+        function getCounter(strArray) {
+            let counts = {};
+            for (let char of strArray) { counts[char] = (counts[char] || 0) + 1; }
+            return counts;
+        }
+
+        function getItemsGroups(categoryData, useUniques) {
+            let groups = {}; 
+            
+            for (let row of categoryData) {
+                let keys = Object.keys(row);
+                if (keys.length === 0) continue;
+                
+                let nameCol = keys.find(k => k.includes('Name') || k.includes('Level ID')) || keys[0];
+                let fullName = String(row[nameCol] || "");
+                if (!fullName.trim()) continue;
+
+                let parts = fullName.split('\n');
+                let displayName = parts[0].trim();
+                let levelId = parts.length > 1 ? parts[1].trim() : "";
+                
+                let isUnique = levelId.includes("_");
+                if (!useUniques && isUnique) continue;
+
+                let runes = [];
+                for (let r of RUNE_TYPES) {
+                    let colName = `Rune ${r}`;
+                    if (row[colName] && String(row[colName]).trim() === '✔') runes.push(r);
+                }
+                
+                runes.sort();
+                if (runes.length > 0) {
+                    let runeKey = runes.join(',');
+                    if (!groups[runeKey]) groups[runeKey] = [];
+                    groups[runeKey].push(displayName);
+                }
+            }
+            return groups;
+        }
+
+        function calculateForMob(mob) {
+            document.getElementById("target-boss-name").textContent = mob.Ancient;
+            document.getElementById("target-runes").textContent = mob.Runes;
+            document.getElementById("results-container").classList.remove("hidden");
+
+            const targetRunesArr = mob.Runes.split('');
+
+            const withUniques = findCombinations(targetRunesArr, true);
+            renderResults(withUniques, "unique-results");
+
+            const withoutUniques = findCombinations(targetRunesArr, false);
+            renderResults(withoutUniques, "normal-results");
+            
+            document.getElementById("results-container").scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function findCombinations(targetRunesArr, useUniques) {
+            const meleeGroups = getItemsGroups(database['Melee'], useUniques);
+            const rangedGroups = getItemsGroups(database['Ranged'], useUniques);
+            const armorGroups = getItemsGroups(database['Armor'], useUniques);
+            const artifactGroups = getItemsGroups(database['Artifacts'], useUniques);
+
+            meleeGroups[''] = [null];
+            rangedGroups[''] = [null];
+            armorGroups[''] = [null];
+            artifactGroups[''] = [null];
+
+            const targetCounter = getCounter(targetRunesArr);
+            let validCombinations = [];
+
+            const mKeys = Object.keys(meleeGroups);
+            const rKeys = Object.keys(rangedGroups);
+            const aKeys = Object.keys(armorGroups);
+            const artKeys = Object.keys(artifactGroups);
+
+            for (let mKey of mKeys) {
+                for (let rKey of rKeys) {
+                    for (let aKey of aKeys) {
+                        for (let artKey of artKeys) {
+                            
+                            let combinedStr = (mKey ? mKey + ',' : '') + (rKey ? rKey + ',' : '') + (aKey ? aKey + ',' : '') + (artKey ? artKey : '');
+                            let combinedArr = combinedStr.split(',').filter(x => x !== '');
+                            let combinedCounter = getCounter(combinedArr);
+
+                            let isValid = true;
+                            for (let r in targetCounter) {
+                                if ((combinedCounter[r] || 0) < targetCounter[r]) {
+                                    isValid = false; break;
+                                }
+                            }
+
+                            if (isValid) {
+                                let extraCounter = {};
+                                let extraRunesList = [];
+                                for (let r in combinedCounter) {
+                                    let extra = combinedCounter[r] - (targetCounter[r] || 0);
+                                    if (extra > 0) {
+                                        for(let i=0; i<extra; i++) extraRunesList.push(r);
+                                    }
+                                }
+                                extraRunesList.sort();
+
+                                let mItems = meleeGroups[mKey];
+                                let rItems = rangedGroups[rKey];
+                                let aItems = armorGroups[aKey];
+                                let artItems = artifactGroups[artKey];
+
+                                let totalItems = 0;
+                                if (mItems[0] !== null) totalItems++;
+                                if (rItems[0] !== null) totalItems++;
+                                if (aItems[0] !== null) totalItems++;
+                                if (artItems[0] !== null) totalItems++;
+
+                                if (totalItems > 0) {
+                                    combinedArr.sort();
+                                    validCombinations.push({
+                                        melee: { items: mItems, runes: mKey ? mKey.split(',') : [] },
+                                        ranged: { items: rItems, runes: rKey ? rKey.split(',') : [] },
+                                        armor: { items: aItems, runes: aKey ? aKey.split(',') : [] },
+                                        artifact: { items: artItems, runes: artKey ? artKey.split(',') : [] },
+                                        extraCount: extraRunesList.length,
+                                        extraStr: extraRunesList.length > 0 ? extraRunesList.join(", ") : "Yok",
+                                        totalItems: totalItems,
+                                        providedRunesStr: combinedArr.join(", ")
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            validCombinations.sort((a, b) => {
+                if (a.extraCount !== b.extraCount) return a.extraCount - b.extraCount;
+                return a.totalItems - b.totalItems;
+            });
+
+            return validCombinations.slice(0, 5);
+        }
+
+        function renderResults(combinations, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            if (combinations.length === 0) {
+                container.innerHTML = `<div class="p-6 bg-black/30 border border-gray-700 rounded-lg text-gray-400 text-center shadow-inner font-bold">❌ Bu rünleri sağlayabilen uygun bir kombinasyon bulunamadı.</div>`;
+                return;
+            }
+
+            combinations.forEach((combo, index) => {
+                const card = document.createElement("div");
+                card.className = "result-card";
+                
+                let titleHtml = "";
+                if (index === 0) {
+                    titleHtml = `<span class="best-badge absolute -top-3 -left-3 shadow-lg text-xs tracking-wider px-3 py-1 rounded-sm">🥇 1. Seçenek - En İyi</span>`;
+                    card.classList.add("best");
+                } else {
+                    titleHtml = `<span class="bg-gray-700 text-gray-300 font-bold px-3 py-1 rounded-sm text-xs absolute -top-3 -left-3 border border-gray-600 shadow">${index + 1}. Seçenek</span>`;
+                }
+
+                let extraHtml = combo.extraCount === 0 
+                    ? `<span class="text-emerald-400 font-bold drop-shadow">Yok (Kusursuz)</span>` 
+                    : `<span class="text-red-400 font-bold drop-shadow">+${combo.extraCount} <span class="text-xs text-red-300 ml-1">(Fazla: ${combo.extraStr})</span></span>`;
+
+                let html = `
+                    ${titleHtml}
+                    <div class="flex flex-wrap justify-between items-center mb-5 mt-1 gap-2 text-sm border-b border-gray-700/60 pb-4">
+                        <div class="text-gray-400 font-medium">Kullanılan Eşya: <span class="text-white font-bold text-base ml-1">${combo.totalItems}</span></div>
+                        <div class="text-gray-400 font-medium">Hata Payı: <span class="ml-1">${extraHtml}</span></div>
+                        <div class="text-gray-400 font-medium w-full sm:w-auto">Sunağa Konan: <span class="font-mono text-gray-300 ml-1 font-bold">${combo.providedRunesStr}</span></div>
+                    </div>
+                    <div class="space-y-2">
+                `;
+
+                const categories = [
+                    { name: "YAKIN DÖVÜŞ", data: combo.melee },
+                    { name: "MENZİLLİ", data: combo.ranged },
+                    { name: "ZIRH", data: combo.armor },
+                    { name: "ARTIFACT", data: combo.artifact }
+                ];
+
+                categories.forEach(cat => {
+                    if (cat.data.items[0] !== null) {
+                        html += `
+                            <div class="item-row flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                <div class="text-gray-500 font-bold w-28 text-xs tracking-widest">${cat.name}</div>
+                                <div class="rune-badge">${cat.data.runes.join(", ")}</div>
+                                <div class="text-gray-200 text-sm flex-1 font-medium leading-relaxed">${cat.data.items.join(", ")}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                html += `</div>`;
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
