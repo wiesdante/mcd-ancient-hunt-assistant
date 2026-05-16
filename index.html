@@ -299,19 +299,7 @@
     <div id="copy-toast" class="toast">Link copied to clipboard!</div>
 
     <script>
-        // ==========================================
-        // CONSTANT GOOGLE SHEETS ID
-        // ==========================================
-        const GOOGLE_SHEETS_ID = "1eLoX0tqOPJJlTZdSQ9H5-ZH5_8Pn-zZVYZpiZjTZGi0";
-        // ==========================================
-
         const RUNE_TYPES = ['U', 'C', 'O', 'S', 'R', 'I', 'P', 'T', 'A'];
-        
-        // BUG FIX: Cache tamamen sıfırlanıyor (v4)
-        const CACHE_KEY = 'ancientHuntDB_v4';
-        const CACHE_TIME_KEY = 'ancientHuntTime_v4';
-        const CACHE_DURATION = 1000 * 60 * 60 * 12; 
-
         let database = { Melee: [], Ranged: [], Armor: [], Artifacts: [], Mobs: [] };
         let globalMobsList = [];
 
@@ -389,107 +377,22 @@
         }
 
         async function fetchAllDataWithCache() {
-            const cachedData = localStorage.getItem(CACHE_KEY);
-            const cacheTime = localStorage.getItem(CACHE_TIME_KEY);
-            
-            if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime) < CACHE_DURATION)) {
-                try {
-                    database = JSON.parse(cachedData);
-                    console.log("Loaded data from Local Cache (Instant Load)");
-                    return;
-                } catch(e) {
-                    console.warn("Cache corrupted, fetching fresh data.");
-                }
-            }
-
-            console.log("Fetching fresh data from Google Sheets...");
-            const sheets = {
-                'Melee': 'Melee Runes',
-                'Ranged': 'Ranged Runes',
-                'Armor': 'Armor Runes',
-                'Artifacts': 'Artifact Runes',
-                'Mobs': 'Ancient Mobs'
-            };
-
-            const promises = Object.entries(sheets).map(async ([key, sheetName]) => {
-                database[key] = await fetchSheetDataJSONP(sheetName);
-            });
-
-            await Promise.all(promises);
-
             try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify(database));
-                localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
-            } catch(e) {
-                console.warn("Could not save to localStorage. It might be full or disabled.");
+                // Cache-buster: '?v=' + Date.now() prevents the browser from keeping stale data
+                const response = await fetch('./data.json?v=' + Date.now());
+
+                if (!response.ok) {
+                    throw new Error(`Data file not found (HTTP ${response.status})`);
+                }
+                database = await response.json();
+
+            } catch (error) {
+                console.error("Failed to load database:", error);
+                // THROW ERROR UPWARDS: This triggers the catch inside window.onload to show the red error screen.
+                throw error;
             }
         }
-
-        let jsonpReqId = 0; // JSONP Çakışmasını önlemek için benzersiz ID
-        function fetchSheetDataJSONP(sheetName) {
-            return new Promise((resolve, reject) => {
-                jsonpReqId++;
-                const callbackName = 'gviz_' + sheetName.replace(/[^a-zA-Z0-9]/g, '') + '_' + Date.now() + '_' + jsonpReqId;
-                const encodedSheetName = encodeURIComponent(sheetName);
-                const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?sheet=${encodedSheetName}&headers=1&tqx=responseHandler:${callbackName}`;
-
-                window[callbackName] = function(data) {
-                    delete window[callbackName];
-                    const scriptEl = document.getElementById(callbackName);
-                    if (scriptEl) scriptEl.remove();
-
-                    if (data.status === 'error') {
-                        reject(new Error(data.errors[0].message || "Unknown Google API Error"));
-                        return;
-                    }
-
-                    try {
-                        const cols = data.table.cols.map(c => c ? c.label : '');
-                        
-                        // BUG FIX: Google API'sinin yanlış sayfa (ilk sayfayı) göndermesini engelleyen koruma!
-                        const hasAncientCol = cols.some(c => c.toLowerCase().includes('ancient'));
-                        if (sheetName === 'Ancient Mobs' && !hasAncientCol) {
-                            reject(new Error(`Expected 'Ancient Mobs' data but received something else.`));
-                            return;
-                        } else if (sheetName !== 'Ancient Mobs' && hasAncientCol) {
-                            // Eğer Melee çekerken karşımıza Ancient Mobs geldiyse sistemi durdur!
-                            reject(new Error(`Could not find the exact tab named "${sheetName}". Google returned the Mobs tab instead. Please check your spreadsheet tabs.`));
-                            return;
-                        }
-
-                        const rows = data.table.rows.map(r => {
-                            let rowObj = {};
-                            if (r && r.c) {
-                                r.c.forEach((cell, i) => {
-                                    if (cols[i]) {
-                                        let val = "";
-                                        if (cell !== null && cell !== undefined) {
-                                            val = cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : "");
-                                        }
-                                        rowObj[cols[i]] = String(val);
-                                    }
-                                });
-                            }
-                            return rowObj;
-                        });
-                        resolve(rows);
-                    } catch (err) {
-                        reject(new Error("Data parsing error: " + err.message));
-                    }
-                };
-
-                const script = document.createElement('script');
-                script.id = callbackName;
-                script.src = url;
-                script.onerror = () => {
-                    delete window[callbackName];
-                    script.remove();
-                    reject(new Error(`Could not reach "${sheetName}". Ensure the sheet is accessible.`));
-                };
-                document.body.appendChild(script);
-            });
-        }
-
+        
         function processMobs() {
             globalMobsList = [];
             for (let row of database['Mobs']) {
