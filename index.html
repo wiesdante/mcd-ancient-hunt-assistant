@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO and Social Media (Open Graph) Meta Tags -->
     <title>Minecraft Dungeons - Ancient Hunt Calculator</title>
+    <meta name="description" content="Calculate exactly which items you need to offer at the altar to summon specific Ancient Bosses and farm your desired loot.">
+    <meta property="og:title" content="Minecraft Dungeons - Ancient Hunt Calculator">
+    <meta property="og:description" content="Calculate the perfect item offerings to summon any Ancient Boss in seconds. Zero wasted runes!">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#f59e0b">
+
     <!-- Modern Design via Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Game Themed Google Fonts -->
@@ -57,6 +65,18 @@
         .mc-btn-primary:active { border-bottom-width: 2px; transform: translateY(2px); }
         .mc-btn-primary:hover { background: #15803d; border-color: #4ade80; }
 
+        .mc-btn-secondary {
+            background: #1f2937;
+            border-color: #374151;
+            border-bottom-width: 4px;
+            color: #d1d5db;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.1s;
+        }
+        .mc-btn-secondary:active { border-bottom-width: 2px; transform: translateY(2px); }
+        .mc-btn-secondary:hover { background: #374151; border-color: #4b5563; color: #fff; }
+
         /* In-Game Search Box */
         .mc-input { 
             background: rgba(0,0,0,0.6); 
@@ -80,7 +100,7 @@
             text-shadow: 0 0 5px rgba(251,191,36,0.6); 
         }
 
-        /* Best Option Medal (Unique Drop Glow) */
+        /* Best Option Medal */
         .best-badge { 
             background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%); 
             color: #fff; 
@@ -117,14 +137,25 @@
         /* Loading Animation */
         .loader { border: 4px solid rgba(255,255,255,0.1); width: 44px; height: 44px; border-radius: 50%; border-left-color: #f59e0b; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Hidden Utility for Copied Notification */
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #22c55e; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 50; pointer-events: none;}
+        .toast.show { opacity: 1; }
     </style>
 </head>
 <body class="p-4 md:p-8 flex flex-col items-center relative">
 
     <div class="w-full max-w-4xl mc-panel p-6 md:p-8 relative z-10 mb-12">
         
+        <!-- Top Actions (Share Button) - Hitbox Fixed with z-20 -->
+        <div class="absolute top-4 right-4 md:top-6 md:right-6 z-20">
+            <button onclick="copyShareLink()" class="mc-btn-secondary px-4 py-2 text-sm flex items-center gap-2">
+                <span>🔗 Share App</span>
+            </button>
+        </div>
+
         <!-- Header -->
-        <div class="text-center mb-8 border-b border-gray-700 pb-6 mt-6 md:mt-0">
+        <div class="text-center mb-8 border-b border-gray-700 pb-6 mt-10 md:mt-0">
             <h1 class="text-5xl md:text-6xl title-font text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-lg mb-1">
                 ⚔️ ANCIENT HUNT
             </h1>
@@ -134,8 +165,8 @@
         <!-- Loading Screen -->
         <div id="loading-screen" class="flex flex-col items-center justify-center py-16 text-center">
             <div class="loader mb-6 mx-auto" id="loader-spinner"></div>
-            <p class="text-yellow-500 font-bold animate-pulse text-lg" id="loading-text">Analyzing Records...</p>
-            <p class="text-gray-500 text-sm mt-2">Connecting to the dungeon database</p>
+            <p class="text-yellow-500 font-bold animate-pulse text-lg" id="loading-text">Loading Records...</p>
+            <p class="text-gray-500 text-sm mt-2" id="loading-sub">Connecting to the dungeon database</p>
         </div>
 
         <!-- Main Content -->
@@ -143,13 +174,27 @@
             
             <!-- Search Box -->
             <div class="mb-10 bg-black/30 p-6 rounded-xl border border-gray-800 shadow-inner">
-                <label class="block text-gray-300 text-sm font-bold mb-3 uppercase tracking-wider" for="search-input">
-                    🔍 Target Item or Boss:
-                </label>
-                <div class="flex gap-3">
-                    <input type="text" id="search-input" placeholder="e.g. Fighter's Bindings, Axe, Weaver (Leave blank for all)" 
-                           class="w-full mc-input rounded-lg py-3 px-4 text-lg">
-                    <button onclick="performSearch()" class="mc-btn-primary py-3 px-8 text-lg">
+                <div class="flex justify-between items-end mb-3">
+                    <label class="block text-gray-300 text-sm font-bold uppercase tracking-wider" for="search-input">
+                        🔍 Target Item or Boss:
+                    </label>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <!-- Input Wrapper for Clear Button -->
+                    <div class="relative w-full">
+                        <input type="text" id="search-input" placeholder="e.g. Fighter's Bindings, Axe, Weaver (Leave blank for all)" 
+                               class="w-full mc-input rounded-lg py-3 pl-4 pr-12 text-lg">
+                        
+                        <!-- Professional Inside-Input Clear Button -->
+                        <button id="clear-btn" onclick="clearSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-yellow-400 hidden transition-colors" title="Clear Search">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <button onclick="performSearch()" class="mc-btn-primary py-3 px-8 text-lg w-full sm:w-auto shrink-0">
                         SEARCH
                     </button>
                 </div>
@@ -157,7 +202,10 @@
 
             <!-- Mob List -->
             <div id="mob-list-container" class="hidden mb-10">
-                <h2 class="text-2xl title-font text-gray-200 mb-4 border-b border-gray-700 pb-2">🎯 TARGET BOSSES</h2>
+                <h2 class="text-2xl title-font text-gray-200 mb-4 border-b border-gray-700 pb-2 flex justify-between items-end">
+                    <span>🎯 TARGET BOSSES</span>
+                    <span id="result-count" class="text-sm font-sans text-gray-500 font-normal"></span>
+                </h2>
                 <div id="mob-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Mob buttons will be injected here via JS -->
                 </div>
@@ -203,6 +251,9 @@
         </p>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="copy-toast" class="toast">Link copied to clipboard!</div>
+
     <script>
         // ==========================================
         // CONSTANT GOOGLE SHEETS ID
@@ -212,25 +263,75 @@
 
         const RUNE_TYPES = ['U', 'C', 'O', 'S', 'R', 'I', 'P', 'T', 'A'];
         
+        // Cache settings (12 hours)
+        const CACHE_KEY = 'ancientHuntDB_v1';
+        const CACHE_TIME_KEY = 'ancientHuntTime_v1';
+        const CACHE_DURATION = 1000 * 60 * 60 * 12; 
+
         let database = { Melee: [], Ranged: [], Armor: [], Artifacts: [], Mobs: [] };
         let globalMobsList = [];
 
         window.onload = async () => {
             try {
-                await fetchAllData();
+                await fetchAllDataWithCache();
                 processMobs();
                 
                 document.getElementById("loading-screen").classList.add("hidden");
                 document.getElementById("main-content").classList.remove("hidden");
                 
-                document.getElementById("search-input").addEventListener("keypress", function(event) {
+                const searchInput = document.getElementById("search-input");
+                
+                // Trigger search on enter
+                searchInput.addEventListener("keypress", function(event) {
                     if (event.key === "Enter") performSearch();
                 });
+                
+                // Show/hide clear button based on input length
+                searchInput.addEventListener("input", function(e) {
+                    const clearBtn = document.getElementById("clear-btn");
+                    if (e.target.value.length > 0) {
+                        clearBtn.classList.remove("hidden");
+                    } else {
+                        clearBtn.classList.add("hidden");
+                    }
+                });
+                
             } catch (error) {
                 console.error(error);
                 showError("Cannot connect to database.", error.message);
             }
         };
+
+        function copyShareLink() {
+            const url = window.location.href.split('?')[0]; // Get clean URL
+            
+            // Fallback copy method using execCommand for better iFrame/older browser support
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast() {
+            const toast = document.getElementById("copy-toast");
+            toast.classList.add("show");
+            setTimeout(() => { toast.classList.remove("show"); }, 3000);
+        }
+
+        function clearSearch() {
+            const input = document.getElementById("search-input");
+            input.value = "";
+            document.getElementById("clear-btn").classList.add("hidden");
+            performSearch();
+            input.focus(); // Focus back to input for better UX
+        }
 
         function showError(title, detail) {
             document.getElementById("loader-spinner").style.display = "none";
@@ -243,6 +344,47 @@
                     <b>Error Detail:</b> ${detail}<br>
                 </div>
             `;
+            document.getElementById("loading-sub").style.display = "none";
+        }
+
+        // --- Intelligent Caching System ---
+        async function fetchAllDataWithCache() {
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            const cacheTime = localStorage.getItem(CACHE_TIME_KEY);
+            
+            // Use cache if it exists and is less than 12 hours old
+            if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime) < CACHE_DURATION)) {
+                try {
+                    database = JSON.parse(cachedData);
+                    console.log("Loaded data from Local Cache (Instant Load)");
+                    return;
+                } catch(e) {
+                    console.warn("Cache corrupted, fetching fresh data.");
+                }
+            }
+
+            console.log("Fetching fresh data from Google Sheets...");
+            const sheets = {
+                'Melee': 'Melee',
+                'Ranged': 'Ranged Runes',
+                'Armor': 'Armor Runes',
+                'Artifacts': 'Artifact Runes',
+                'Mobs': 'Ancient Mobs'
+            };
+
+            const promises = Object.entries(sheets).map(async ([key, sheetName]) => {
+                database[key] = await fetchSheetDataJSONP(sheetName);
+            });
+
+            await Promise.all(promises);
+
+            // Save to Cache
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(database));
+                localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+            } catch(e) {
+                console.warn("Could not save to localStorage. It might be full or disabled.");
+            }
         }
 
         // --- JSONP Data Fetcher ---
@@ -297,22 +439,6 @@
             });
         }
 
-        async function fetchAllData() {
-            const sheets = {
-                'Melee': 'Melee',
-                'Ranged': 'Ranged Runes',
-                'Armor': 'Armor Runes',
-                'Artifacts': 'Artifact Runes',
-                'Mobs': 'Ancient Mobs'
-            };
-
-            const promises = Object.entries(sheets).map(async ([key, sheetName]) => {
-                database[key] = await fetchSheetDataJSONP(sheetName);
-            });
-
-            await Promise.all(promises);
-        }
-
         function processMobs() {
             globalMobsList = [];
             for (let row of database['Mobs']) {
@@ -331,6 +457,7 @@
             const listContainer = document.getElementById("mob-list-container");
             const mobListEl = document.getElementById("mob-list");
             const resultsContainer = document.getElementById("results-container");
+            const resultCountEl = document.getElementById("result-count");
             
             resultsContainer.classList.add("hidden");
             mobListEl.innerHTML = "";
@@ -338,6 +465,8 @@
             let foundMobs = globalMobsList.filter(mob => {
                 return mob.Drops.toLowerCase().includes(searchText) || mob.Ancient.toLowerCase().includes(searchText);
             });
+
+            resultCountEl.textContent = `${foundMobs.length} Boss(es) Found`;
 
             if (foundMobs.length === 0) {
                 mobListEl.innerHTML = `<div class="col-span-2 p-5 bg-red-900/20 border border-red-800 rounded-lg text-red-300 text-center font-bold text-lg shadow-inner">❌ No item or boss found containing '${searchText}'.</div>`;
@@ -533,18 +662,19 @@
                     <div class="space-y-2">
                 `;
 
+                // Emojis added for better visual categorization
                 const categories = [
-                    { name: "MELEE", data: combo.melee },
-                    { name: "RANGED", data: combo.ranged },
-                    { name: "ARMOR", data: combo.armor },
-                    { name: "ARTIFACT", data: combo.artifact }
+                    { name: "⚔️ MELEE", data: combo.melee },
+                    { name: "🏹 RANGED", data: combo.ranged },
+                    { name: "🛡️ ARMOR", data: combo.armor },
+                    { name: "🔮 ARTIFACT", data: combo.artifact }
                 ];
 
                 categories.forEach(cat => {
                     if (cat.data.items[0] !== null) {
                         html += `
                             <div class="item-row flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                                <div class="text-gray-500 font-bold w-28 text-xs tracking-widest">${cat.name}</div>
+                                <div class="text-gray-400 font-bold w-28 text-xs tracking-widest">${cat.name}</div>
                                 <div class="rune-badge">${cat.data.runes.join(", ")}</div>
                                 <div class="text-gray-200 text-sm flex-1 font-medium leading-relaxed">${cat.data.items.join(", ")}</div>
                             </div>
