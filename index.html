@@ -213,15 +213,59 @@
 
             <!-- Results Panel -->
             <div id="results-container" class="hidden mt-8 border-t border-gray-700 pt-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-black/40 p-4 border border-gray-700 rounded-xl">
+                
+                <!-- Target Header -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 bg-black/40 p-4 border border-gray-700 rounded-xl">
                     <div>
                         <h2 id="target-boss-name" class="text-3xl title-font text-white"></h2>
                         <p class="text-gray-400 text-sm">Required rune combinations to summon.</p>
                     </div>
-                    <div class="bg-gray-900 px-5 py-3 rounded-lg border border-gray-700 shadow-inner flex items-center">
+                    <div class="bg-gray-900 px-5 py-3 rounded-lg border border-gray-700 shadow-inner flex items-center shrink-0">
                         <span class="text-gray-400 text-sm font-bold uppercase tracking-wider mr-3">Target:</span>
                         <span id="target-runes" class="font-mono text-yellow-400 font-bold text-xl tracking-widest text-shadow"></span>
                     </div>
+                </div>
+
+                <!-- Info Grid (Drops & Boss Intel) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    
+                    <!-- Possible Drops Section -->
+                    <div id="target-drops-container" class="hidden bg-black/20 border border-gray-800 p-5 rounded-xl shadow-inner h-full">
+                        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center">
+                            <span class="mr-2">🎁</span> Possible Loot Drops
+                        </h4>
+                        <div id="target-drops-list" class="flex flex-wrap gap-2">
+                            <!-- Drops badges will be injected here via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Boss Intel Section -->
+                    <div id="target-intel-container" class="hidden bg-black/20 border border-gray-800 p-5 rounded-xl shadow-inner h-full flex flex-col justify-center space-y-3">
+                        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center">
+                            <span class="mr-2">📜</span> Ancient Intel
+                        </h4>
+                        
+                        <div class="text-sm flex items-start">
+                            <span class="w-28 shrink-0 text-gray-500 font-bold tracking-wider text-xs mt-0.5">ARENA:</span>
+                            <span id="intel-arena" class="font-medium text-purple-300"></span>
+                        </div>
+                        
+                        <div class="text-sm flex items-start">
+                            <span class="w-28 shrink-0 text-gray-500 font-bold tracking-wider text-xs mt-0.5">MINIONS:</span>
+                            <span id="intel-minions" class="font-medium text-rose-300"></span>
+                        </div>
+                        
+                        <div class="text-sm flex items-start">
+                            <span class="w-28 shrink-0 text-gray-500 font-bold tracking-wider text-xs mt-0.5">MINION BUFFS:</span>
+                            <div id="intel-minion-enchants" class="flex flex-wrap gap-1"></div>
+                        </div>
+                        
+                        <div class="text-sm flex items-start">
+                            <span class="w-28 shrink-0 text-gray-500 font-bold tracking-wider text-xs mt-0.5">BOSS BUFFS:</span>
+                            <div id="intel-boss-enchants" class="flex flex-wrap gap-1"></div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Unique Results -->
@@ -446,7 +490,12 @@
                     globalMobsList.push({
                         Ancient: String(row['Ancient']).trim(),
                         Runes: String(row['Runes']).trim().toUpperCase(),
-                        Drops: String(row['Possible Drops'] || '').trim()
+                        Drops: String(row['Possible Drops'] || '').trim(),
+                        // E-Tablodaki diğer sütunlar listeye dahil edildi
+                        Enchantments: String(row['Potential Enchantments'] || '').trim(),
+                        Minions: String(row['Minions'] || '').trim(),
+                        MinionEnchants: String(row['Minion Enchantments'] || '').trim(),
+                        Arena: String(row['Arena'] || '').trim()
                     });
                 }
             }
@@ -532,6 +581,57 @@
             document.getElementById("target-runes").textContent = mob.Runes;
             document.getElementById("results-container").classList.remove("hidden");
 
+            // --- Populate Possible Drops ---
+            const dropsContainerList = document.getElementById("target-drops-list");
+            const dropsContainerWrapper = document.getElementById("target-drops-container");
+            dropsContainerList.innerHTML = "";
+            
+            if (mob.Drops) {
+                // Split items by newline
+                const dropsArray = mob.Drops.split('\n').filter(drop => drop.trim() !== '');
+                
+                dropsArray.forEach(drop => {
+                    const badge = document.createElement("span");
+                    badge.className = "bg-gray-800 border border-gray-600 text-gray-300 px-3 py-1.5 rounded-md text-sm font-medium shadow-sm hover:border-yellow-500 hover:text-yellow-400 transition-colors cursor-default";
+                    badge.textContent = drop.trim();
+                    dropsContainerList.appendChild(badge);
+                });
+                
+                dropsContainerWrapper.classList.remove("hidden");
+            } else {
+                dropsContainerWrapper.classList.add("hidden");
+            }
+
+            // --- Populate Boss Intel ---
+            const intelContainerWrapper = document.getElementById("target-intel-container");
+            document.getElementById("intel-arena").textContent = mob.Arena || "Unknown";
+            document.getElementById("intel-minions").textContent = mob.Minions || "None";
+            
+            // Büyüleri (Enchantments) etiketlere dönüştüren yardımcı fonksiyon
+            const renderEnchants = (str, containerId, colorClasses) => {
+                const container = document.getElementById(containerId);
+                container.innerHTML = "";
+                
+                if (!str || str.toLowerCase() === "none" || str.trim() === "") {
+                    container.innerHTML = '<span class="text-gray-600 italic text-xs">None</span>';
+                    return;
+                }
+                
+                // Alt alta yazılan büyüleri ayır ve etiket oluştur
+                str.split('\n').filter(e => e.trim() !== '').forEach(e => {
+                    const badge = document.createElement("span");
+                    badge.className = `px-2 py-0.5 rounded text-xs font-bold bg-gray-900 border border-gray-700 shadow-sm ${colorClasses}`;
+                    badge.textContent = e.trim();
+                    container.appendChild(badge);
+                });
+            };
+
+            // Minyon ve Boss büyülerini ilgili yerlere aktar
+            renderEnchants(mob.MinionEnchants, "intel-minion-enchants", "text-orange-400");
+            renderEnchants(mob.Enchantments, "intel-boss-enchants", "text-red-400");
+            intelContainerWrapper.classList.remove("hidden");
+
+            // --- Run Combinations Logic ---
             const targetRunesArr = mob.Runes.split('');
 
             const withUniques = findCombinations(targetRunesArr, true);
