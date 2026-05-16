@@ -147,7 +147,7 @@
 
     <div class="w-full max-w-4xl mc-panel p-6 md:p-8 relative z-10 mb-12">
         
-        <!-- Top Actions (Share Button) - Hitbox Fixed with z-20 -->
+        <!-- Top Actions (Share Button) -->
         <div class="absolute top-4 right-4 md:top-6 md:right-6 z-20">
             <button onclick="copyShareLink()" class="mc-btn-secondary px-4 py-2 text-sm flex items-center gap-2">
                 <span>🔗 Share App</span>
@@ -307,9 +307,9 @@
 
         const RUNE_TYPES = ['U', 'C', 'O', 'S', 'R', 'I', 'P', 'T', 'A'];
         
-        // Cache settings (12 hours)
-        const CACHE_KEY = 'ancientHuntDB_v1';
-        const CACHE_TIME_KEY = 'ancientHuntTime_v1';
+        // BUG FIX: Cache tamamen sıfırlanıyor (v4)
+        const CACHE_KEY = 'ancientHuntDB_v4';
+        const CACHE_TIME_KEY = 'ancientHuntTime_v4';
         const CACHE_DURATION = 1000 * 60 * 60 * 12; 
 
         let database = { Melee: [], Ranged: [], Armor: [], Artifacts: [], Mobs: [] };
@@ -325,12 +325,10 @@
                 
                 const searchInput = document.getElementById("search-input");
                 
-                // Trigger search on enter
                 searchInput.addEventListener("keypress", function(event) {
                     if (event.key === "Enter") performSearch();
                 });
                 
-                // Show/hide clear button based on input length
                 searchInput.addEventListener("input", function(e) {
                     const clearBtn = document.getElementById("clear-btn");
                     if (e.target.value.length > 0) {
@@ -347,9 +345,8 @@
         };
 
         function copyShareLink() {
-            const url = window.location.href.split('?')[0]; // Get clean URL
+            const url = window.location.href.split('?')[0]; 
             
-            // Fallback copy method using execCommand for better iFrame/older browser support
             const textArea = document.createElement("textarea");
             textArea.value = url;
             document.body.appendChild(textArea);
@@ -374,7 +371,7 @@
             input.value = "";
             document.getElementById("clear-btn").classList.add("hidden");
             performSearch();
-            input.focus(); // Focus back to input for better UX
+            input.focus(); 
         }
 
         function showError(title, detail) {
@@ -391,12 +388,10 @@
             document.getElementById("loading-sub").style.display = "none";
         }
 
-        // --- Intelligent Caching System ---
         async function fetchAllDataWithCache() {
             const cachedData = localStorage.getItem(CACHE_KEY);
             const cacheTime = localStorage.getItem(CACHE_TIME_KEY);
             
-            // Use cache if it exists and is less than 12 hours old
             if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime) < CACHE_DURATION)) {
                 try {
                     database = JSON.parse(cachedData);
@@ -409,7 +404,7 @@
 
             console.log("Fetching fresh data from Google Sheets...");
             const sheets = {
-                'Melee': 'Melee',
+                'Melee': 'Melee Runes',
                 'Ranged': 'Ranged Runes',
                 'Armor': 'Armor Runes',
                 'Artifacts': 'Artifact Runes',
@@ -422,7 +417,6 @@
 
             await Promise.all(promises);
 
-            // Save to Cache
             try {
                 localStorage.setItem(CACHE_KEY, JSON.stringify(database));
                 localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
@@ -431,10 +425,11 @@
             }
         }
 
-        // --- JSONP Data Fetcher ---
+        let jsonpReqId = 0; // JSONP Çakışmasını önlemek için benzersiz ID
         function fetchSheetDataJSONP(sheetName) {
             return new Promise((resolve, reject) => {
-                const callbackName = 'gviz_' + sheetName.replace(/[^a-zA-Z0-9]/g, '') + '_' + Math.random().toString(36).substring(7);
+                jsonpReqId++;
+                const callbackName = 'gviz_' + sheetName.replace(/[^a-zA-Z0-9]/g, '') + '_' + Date.now() + '_' + jsonpReqId;
                 const encodedSheetName = encodeURIComponent(sheetName);
                 const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?sheet=${encodedSheetName}&headers=1&tqx=responseHandler:${callbackName}`;
 
@@ -450,6 +445,18 @@
 
                     try {
                         const cols = data.table.cols.map(c => c ? c.label : '');
+                        
+                        // BUG FIX: Google API'sinin yanlış sayfa (ilk sayfayı) göndermesini engelleyen koruma!
+                        const hasAncientCol = cols.some(c => c.toLowerCase().includes('ancient'));
+                        if (sheetName === 'Ancient Mobs' && !hasAncientCol) {
+                            reject(new Error(`Expected 'Ancient Mobs' data but received something else.`));
+                            return;
+                        } else if (sheetName !== 'Ancient Mobs' && hasAncientCol) {
+                            // Eğer Melee çekerken karşımıza Ancient Mobs geldiyse sistemi durdur!
+                            reject(new Error(`Could not find the exact tab named "${sheetName}". Google returned the Mobs tab instead. Please check your spreadsheet tabs.`));
+                            return;
+                        }
+
                         const rows = data.table.rows.map(r => {
                             let rowObj = {};
                             if (r && r.c) {
@@ -491,7 +498,6 @@
                         Ancient: String(row['Ancient']).trim(),
                         Runes: String(row['Runes']).trim().toUpperCase(),
                         Drops: String(row['Possible Drops'] || '').trim(),
-                        // E-Tablodaki diğer sütunlar listeye dahil edildi
                         Enchantments: String(row['Potential Enchantments'] || '').trim(),
                         Minions: String(row['Minions'] || '').trim(),
                         MinionEnchants: String(row['Minion Enchantments'] || '').trim(),
@@ -549,6 +555,11 @@
                 let keys = Object.keys(row);
                 if (keys.length === 0) continue;
                 
+                // BUG FIX: Sızıntı Koruması. Mobs verisi bir şekilde eşya okuyucuya gelirse anında reddet!
+                if (keys.some(k => k.toLowerCase() === 'ancient' || k.toLowerCase() === 'arena')) {
+                    continue; 
+                }
+                
                 let nameCol = keys.find(k => k.includes('Name') || k.includes('Level ID')) || keys[0];
                 let fullName = String(row[nameCol] || "");
                 if (!fullName.trim()) continue;
@@ -562,8 +573,18 @@
 
                 let runes = [];
                 for (let r of RUNE_TYPES) {
-                    let colName = `Rune ${r}`;
-                    if (row[colName] && String(row[colName]).trim() === '✔') runes.push(r);
+                    // BUG FIX: Rune kelimesini ararken katı eşleştirme yap! (Rune S ile Runes kelimelerinin karışmasını engeller)
+                    let colName = keys.find(k => {
+                        let clean = k.toLowerCase().trim();
+                        return clean === `rune ${r.toLowerCase()}` || clean === `rune${r.toLowerCase()}`;
+                    });
+                    
+                    if (colName) {
+                        let cellVal = String(row[colName] || "").trim().toLowerCase();
+                        if (cellVal && cellVal !== 'false' && cellVal !== '0' && cellVal !== 'null' && cellVal !== 'undefined' && cellVal !== 'none') {
+                            runes.push(r);
+                        }
+                    }
                 }
                 
                 runes.sort();
@@ -581,13 +602,11 @@
             document.getElementById("target-runes").textContent = mob.Runes;
             document.getElementById("results-container").classList.remove("hidden");
 
-            // --- Populate Possible Drops ---
             const dropsContainerList = document.getElementById("target-drops-list");
             const dropsContainerWrapper = document.getElementById("target-drops-container");
             dropsContainerList.innerHTML = "";
             
             if (mob.Drops) {
-                // Split items by newline
                 const dropsArray = mob.Drops.split('\n').filter(drop => drop.trim() !== '');
                 
                 dropsArray.forEach(drop => {
@@ -602,12 +621,10 @@
                 dropsContainerWrapper.classList.add("hidden");
             }
 
-            // --- Populate Boss Intel ---
             const intelContainerWrapper = document.getElementById("target-intel-container");
             document.getElementById("intel-arena").textContent = mob.Arena || "Unknown";
             document.getElementById("intel-minions").textContent = mob.Minions || "None";
             
-            // Büyüleri (Enchantments) etiketlere dönüştüren yardımcı fonksiyon
             const renderEnchants = (str, containerId, colorClasses) => {
                 const container = document.getElementById(containerId);
                 container.innerHTML = "";
@@ -617,7 +634,6 @@
                     return;
                 }
                 
-                // Alt alta yazılan büyüleri ayır ve etiket oluştur
                 str.split('\n').filter(e => e.trim() !== '').forEach(e => {
                     const badge = document.createElement("span");
                     badge.className = `px-2 py-0.5 rounded text-xs font-bold bg-gray-900 border border-gray-700 shadow-sm ${colorClasses}`;
@@ -626,13 +642,11 @@
                 });
             };
 
-            // Minyon ve Boss büyülerini ilgili yerlere aktar
             renderEnchants(mob.MinionEnchants, "intel-minion-enchants", "text-orange-400");
             renderEnchants(mob.Enchantments, "intel-boss-enchants", "text-red-400");
             intelContainerWrapper.classList.remove("hidden");
 
-            // --- Run Combinations Logic ---
-            const targetRunesArr = mob.Runes.split('');
+            const targetRunesArr = mob.Runes.replace(/[^A-Za-z]/g, '').toUpperCase().split('');
 
             const withUniques = findCombinations(targetRunesArr, true);
             renderResults(withUniques, "unique-results");
@@ -762,7 +776,6 @@
                     <div class="space-y-2">
                 `;
 
-                // Emojis added for better visual categorization
                 const categories = [
                     { name: "⚔️ MELEE", data: combo.melee },
                     { name: "🏹 RANGED", data: combo.ranged },
