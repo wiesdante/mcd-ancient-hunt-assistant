@@ -1,6 +1,6 @@
 # ⚔️ Minecraft Dungeons - Ancient Hunt Calculator
 
-> A professional, web-based assistant for **Minecraft Dungeons** players. It calculates exactly **which items you need to offer at the altar** to summon specific Ancient Bosses and farm your desired loot in Ancient Hunts.
+> A web-based assistant for **Minecraft Dungeons** players. It helps you figure out **which items to offer** to summon specific Ancient Bosses and farm the loot you want in Ancient Hunts.
 
 ## 🎮 Live Demo
 
@@ -10,34 +10,33 @@ You can use this application directly in your browser without downloading anythi
 
 ## 🌟 Why Do You Need This Tool?
 
-To summon an **"Ancient Boss"** that drops specific loot (e.g., *Fighter's Bindings*) in Minecraft Dungeons, you must sacrifice items with specific runes at the altar (e.g., `C, C, O, T` runes).
+To summon an **Ancient Boss** that drops specific loot in Minecraft Dungeons, you need to sacrifice items with the correct rune combinations.
 
-However, there are hundreds of items in the game. Figuring out how to combine them to get your target runes **using the fewest items possible and without leaving "extra" runes (which might spawn unwanted bosses)** can take hours.
+Since there are hundreds of items in the game, finding the right combination manually — especially while avoiding unnecessary extra runes — can be time-consuming and confusing.
 
-This application reduces those hours to mere seconds!
+This application makes that process much faster and easier.
 
 ## ✨ Features
 
-* 🔍 **Smart Search Engine:** Just type the name of the item you want to drop or the Boss's name, and let the tool do the rest.
+* 🔍 **Smart Search:** Search by item name or Ancient Boss name and quickly find the combinations you need.
 
-* 🧮 **Flawless Algorithm:** Strictly follows the in-game offering rules *(Max 1 Melee, 1 Ranged, 1 Armor, 1 Artifact)* and provides combinations that yield the fewest "extra" runes.
+* 🧮 **Offering Calculator:** Follows the in-game offering rules *(Max 1 Melee, 1 Ranged, 1 Armor, 1 Artifact)* and calculates valid combinations with the fewest extra runes possible.
 
-* 🌟 **Unique Item Filter:** Separately lists combinations made *only* with easily obtainable "Normal" items and combinations that include special "Unique" items.
+* 🌟 **Unique / Normal Item Separation:** Shows combinations made with regular items separately from those that include Unique items.
 
-* ☁️ **Secure Cloud Database:** Item runes and mob data are fetched in real-time directly from a cloud-based Google Sheets document. The database is always up-to-date.
+* 📦 **Self-Contained Data:** All item and boss data is stored in a static JSON file inside the GitHub repo, making the project easier to maintain and keeping everything in one place.
 
 ## 🚀 Technical Architecture
 
-This project is built with modern web technologies using a "Zero-Install" architecture.
+This project is built with a simple and lightweight setup:
 
-* **Frontend:** Vanilla HTML, JS, and CSS.
-
-* **Backend:** None! It uses a Serverless architecture. Data is fetched from a Google Spreadsheet.
-
-* **Optimization:** The combination algorithm utilizes a smart "rune grouping" logic, reducing calculation times to milliseconds.
+* **Frontend:** Vanilla HTML, JavaScript, and CSS.
+* **Data Source:** Static JSON file stored in the GitHub repository.
+* **Deployment:** Hosted on GitHub Pages.
+* **Optimization:** The combination logic is designed to return results quickly and efficiently.
 
 ## 🤝 Contributing
 
-Found a bug or need to update the item tables? Feel free to reach me at Discord: **wiesdante**.
+Found a bug, missing data, or something that could be improved? Feel free to reach me on Discord: **wiesdante**
 
-*Happy hunting! ⚔️*
+Thanks for checking it out, and happy hunting! ⚔️
