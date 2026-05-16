@@ -36,8 +36,6 @@ This project is built with modern web technologies using a "Zero-Install" archit
 
 * **Optimization:** The combination algorithm utilizes a smart "rune grouping" logic, reducing calculation times to milliseconds.
 
-## 🛠️ How to Run / Create Your Own Version
-
 ## 🤝 Contributing
 
 Found a bug or need to update the item tables? Feel free to reach me at Discord: **wiesdante**.
