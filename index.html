@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Dungeons - Ancient Hunt Hesaplayıcı</title>
-    <!-- Modern Tasarım için Tailwind CSS -->
+    <title>Minecraft Dungeons - Ancient Hunt Calculator</title>
+    <!-- Modern Design via Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Oyun Temasına Uygun Google Yazı Tipleri -->
+    <!-- Game Themed Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* Genel Tema: Zindan / Obsidian Vibe */
+        /* General Theme: Dungeon / Obsidian Vibe */
         body { 
             background-color: #121212; 
             background-image: radial-gradient(circle at top center, #2d233e 0%, #0a0a0c 80%); 
@@ -18,10 +18,10 @@
             min-height: 100vh;
         }
         
-        /* Başlık Fontu */
+        /* Title Font */
         .title-font { font-family: 'Teko', sans-serif; letter-spacing: 1.5px; }
 
-        /* Minecraft Paneli (Koyu Yarı Saydam Taş) */
+        /* Minecraft Panel (Dark Translucent Stone) */
         .mc-panel { 
             background: rgba(20, 20, 24, 0.9); 
             border: 2px solid #3f3f4a; 
@@ -30,7 +30,7 @@
             backdrop-filter: blur(8px); 
         }
 
-        /* 3D Minecraft Butonları */
+        /* 3D Minecraft Buttons */
         .mc-btn { 
             background: #2a2a35; 
             border: 2px solid #4a4a5a; 
@@ -57,7 +57,7 @@
         .mc-btn-primary:active { border-bottom-width: 2px; transform: translateY(2px); }
         .mc-btn-primary:hover { background: #15803d; border-color: #4ade80; }
 
-        /* Oyun İçi Arama Kutusu */
+        /* In-Game Search Box */
         .mc-input { 
             background: rgba(0,0,0,0.6); 
             border: 2px solid #444; 
@@ -67,7 +67,7 @@
         }
         .mc-input:focus { border-color: #f59e0b; outline: none; box-shadow: inset 0 4px 6px rgba(0,0,0,0.8), 0 0 10px rgba(245, 158, 11, 0.3); }
 
-        /* Parlayan Rün Taşları */
+        /* Glowing Rune Stones */
         .rune-badge { 
             background: #1a1a1a; 
             border: 2px solid #444; 
@@ -80,7 +80,7 @@
             text-shadow: 0 0 5px rgba(251,191,36,0.6); 
         }
 
-        /* En İyi Seçenek Madalyası (Unique Drop Parıltısı) */
+        /* Best Option Medal (Unique Drop Glow) */
         .best-badge { 
             background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%); 
             color: #fff; 
@@ -91,7 +91,7 @@
             text-transform: uppercase;
         }
 
-        /* Eşya Satırları */
+        /* Item Rows */
         .item-row { 
             border-left: 4px solid #4b5563; 
             padding-left: 12px; 
@@ -104,90 +104,90 @@
         }
         .item-row:hover { background: rgba(255,255,255,0.05); border-left-color: #f59e0b; }
 
-        /* Zindan Sonuç Kartları */
+        /* Dungeon Result Cards */
         .result-card { background: rgba(0,0,0,0.4); border: 2px solid #333; border-radius: 10px; padding: 20px; position: relative; margin-bottom: 20px; }
         .result-card.best { border-color: #b45309; box-shadow: 0 0 20px rgba(180, 83, 9, 0.2); }
         
-        /* Özel Kaydırma Çubuğu */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: #0a0a0c; }
         ::-webkit-scrollbar-thumb { background: #3f3f4a; border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: #5a5a6a; }
         
-        /* Yükleme Animasyonu */
+        /* Loading Animation */
         .loader { border: 4px solid rgba(255,255,255,0.1); width: 44px; height: 44px; border-radius: 50%; border-left-color: #f59e0b; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="p-4 md:p-8 flex flex-col items-center">
+<body class="p-4 md:p-8 flex flex-col items-center relative">
 
-    <div class="w-full max-w-4xl mc-panel p-6 md:p-8 relative">
+    <div class="w-full max-w-4xl mc-panel p-6 md:p-8 relative z-10 mb-12">
         
-        <!-- Başlık -->
-        <div class="text-center mb-8 border-b border-gray-700 pb-6">
+        <!-- Header -->
+        <div class="text-center mb-8 border-b border-gray-700 pb-6 mt-6 md:mt-0">
             <h1 class="text-5xl md:text-6xl title-font text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-lg mb-1">
                 ⚔️ ANCIENT HUNT
             </h1>
-            <p class="text-gray-400 text-sm md:text-base tracking-wide uppercase font-bold">Rün ve Eşya Asistanı</p>
+            <p class="text-gray-400 text-sm md:text-base tracking-wide uppercase font-bold">Rune and Item Assistant</p>
         </div>
 
-        <!-- Yükleme Ekranı -->
+        <!-- Loading Screen -->
         <div id="loading-screen" class="flex flex-col items-center justify-center py-16 text-center">
             <div class="loader mb-6 mx-auto" id="loader-spinner"></div>
-            <p class="text-yellow-500 font-bold animate-pulse text-lg" id="loading-text">Kayıtlar İnceleniyor...</p>
-            <p class="text-gray-500 text-sm mt-2">Zindan veritabanına bağlanılıyor</p>
+            <p class="text-yellow-500 font-bold animate-pulse text-lg" id="loading-text">Analyzing Records...</p>
+            <p class="text-gray-500 text-sm mt-2">Connecting to the dungeon database</p>
         </div>
 
-        <!-- Ana İçerik -->
+        <!-- Main Content -->
         <div id="main-content" class="hidden">
             
-            <!-- Arama Kutusu -->
-            <div class="mb-10 bg-black/30 p-6 rounded-xl border border-gray-800">
+            <!-- Search Box -->
+            <div class="mb-10 bg-black/30 p-6 rounded-xl border border-gray-800 shadow-inner">
                 <label class="block text-gray-300 text-sm font-bold mb-3 uppercase tracking-wider" for="search-input">
-                    🔍 Aranacak Eşya Veya Boss:
+                    🔍 Target Item or Boss:
                 </label>
                 <div class="flex gap-3">
-                    <input type="text" id="search-input" placeholder="Örn: Fighter's Bindings, Axe, Weaver (Tümü için boş bırakın)" 
+                    <input type="text" id="search-input" placeholder="e.g. Fighter's Bindings, Axe, Weaver (Leave blank for all)" 
                            class="w-full mc-input rounded-lg py-3 px-4 text-lg">
                     <button onclick="performSearch()" class="mc-btn-primary py-3 px-8 text-lg">
-                        ARA
+                        SEARCH
                     </button>
                 </div>
             </div>
 
-            <!-- Mob Listesi -->
+            <!-- Mob List -->
             <div id="mob-list-container" class="hidden mb-10">
-                <h2 class="text-2xl title-font text-gray-200 mb-4 border-b border-gray-700 pb-2">🎯 HEDEF BOSS'LAR</h2>
+                <h2 class="text-2xl title-font text-gray-200 mb-4 border-b border-gray-700 pb-2">🎯 TARGET BOSSES</h2>
                 <div id="mob-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Mob butonları JS ile eklenecek -->
+                    <!-- Mob buttons will be injected here via JS -->
                 </div>
             </div>
 
-            <!-- Sonuç Paneli -->
+            <!-- Results Panel -->
             <div id="results-container" class="hidden mt-8 border-t border-gray-700 pt-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-black/40 p-4 border border-gray-700 rounded-xl">
                     <div>
                         <h2 id="target-boss-name" class="text-3xl title-font text-white"></h2>
-                        <p class="text-gray-400 text-sm">Çağırmak için gereken rün kombinasyonları hesaplandı.</p>
+                        <p class="text-gray-400 text-sm">Required rune combinations to summon.</p>
                     </div>
                     <div class="bg-gray-900 px-5 py-3 rounded-lg border border-gray-700 shadow-inner flex items-center">
-                        <span class="text-gray-400 text-sm font-bold uppercase tracking-wider mr-3">Hedef:</span>
+                        <span class="text-gray-400 text-sm font-bold uppercase tracking-wider mr-3">Target:</span>
                         <span id="target-runes" class="font-mono text-yellow-400 font-bold text-xl tracking-widest text-shadow"></span>
                     </div>
                 </div>
 
-                <!-- Unique Sonuçlar -->
+                <!-- Unique Results -->
                 <div class="mb-12">
                     <h3 class="text-2xl title-font text-purple-400 mb-4 flex items-center border-b border-purple-900/50 pb-2">
-                        <span class="mr-2">🌟</span> UNIQUE EŞYALAR DAHİL KOMBİNASYONLAR
+                        <span class="mr-2">🌟</span> COMBINATIONS INCLUDING UNIQUE ITEMS
                     </h3>
                     <div id="unique-results"></div>
                 </div>
 
-                <!-- Normal Sonuçlar -->
+                <!-- Normal Results -->
                 <div>
                     <h3 class="text-2xl title-font text-emerald-400 mb-4 flex items-center border-b border-emerald-900/50 pb-2">
-                        <span class="mr-2">📦</span> SADECE NORMAL EŞYALAR İLE
+                        <span class="mr-2">📦</span> ONLY NORMAL ITEMS
                     </h3>
                     <div id="normal-results"></div>
                 </div>
@@ -195,11 +195,17 @@
 
         </div>
     </div>
+    
+    <!-- Footer - Credits -->
+    <div class="fixed bottom-3 right-4 z-0 opacity-40 hover:opacity-100 transition-opacity duration-300">
+        <p class="text-xs text-gray-400 font-medium tracking-wide">
+            Created by <span class="text-yellow-500 font-bold">wiesdante</span>
+        </p>
+    </div>
 
     <script>
         // ==========================================
-        // SABİT GOOGLE SHEETS ID
-        // (Kullanıcı tarafından verilen kalıcı ID)
+        // CONSTANT GOOGLE SHEETS ID
         // ==========================================
         const GOOGLE_SHEETS_ID = "1eLoX0tqOPJJlTZdSQ9H5-ZH5_8Pn-zZVYZpiZjTZGi0";
         // ==========================================
@@ -222,7 +228,7 @@
                 });
             } catch (error) {
                 console.error(error);
-                showError("Veritabanına ulaşılamadı.", error.message);
+                showError("Cannot connect to database.", error.message);
             }
         };
 
@@ -233,13 +239,13 @@
             loadingText.classList.remove("animate-pulse");
             loadingText.innerHTML = `
                 <div class="text-2xl title-font mb-2">❌ ${title}</div>
-                <div class="text-sm font-sans text-red-300 bg-red-900/30 p-4 rounded border border-red-800 inline-block text-left mt-2">
-                    <b>Hata Detayı:</b> ${detail}<br>
+                <div class="text-sm font-sans text-red-300 bg-red-900/30 p-4 rounded border border-red-800 inline-block text-left mt-2 shadow-inner">
+                    <b>Error Detail:</b> ${detail}<br>
                 </div>
             `;
         }
 
-        // --- JSONP Veri Çekme Motoru ---
+        // --- JSONP Data Fetcher ---
         function fetchSheetDataJSONP(sheetName) {
             return new Promise((resolve, reject) => {
                 const callbackName = 'gviz_' + sheetName.replace(/[^a-zA-Z0-9]/g, '') + '_' + Math.random().toString(36).substring(7);
@@ -252,7 +258,7 @@
                     if (scriptEl) scriptEl.remove();
 
                     if (data.status === 'error') {
-                        reject(new Error(data.errors[0].message || "Bilinmeyen Google API Hatası"));
+                        reject(new Error(data.errors[0].message || "Unknown Google API Error"));
                         return;
                     }
 
@@ -275,7 +281,7 @@
                         });
                         resolve(rows);
                     } catch (err) {
-                        reject(new Error("Veri ayrıştırma hatası: " + err.message));
+                        reject(new Error("Data parsing error: " + err.message));
                     }
                 };
 
@@ -285,7 +291,7 @@
                 script.onerror = () => {
                     delete window[callbackName];
                     script.remove();
-                    reject(new Error(`"${sheetName}" sayfasına ulaşılamadı. Tablonun herkese açık olduğundan emin olun.`));
+                    reject(new Error(`Could not reach "${sheetName}". Ensure the sheet is accessible.`));
                 };
                 document.body.appendChild(script);
             });
@@ -334,7 +340,7 @@
             });
 
             if (foundMobs.length === 0) {
-                mobListEl.innerHTML = `<div class="col-span-2 p-5 bg-red-900/20 border border-red-800 rounded-lg text-red-300 text-center font-bold text-lg shadow-inner">❌ '${searchText}' kelimesini içeren eşya veya boss bulunamadı.</div>`;
+                mobListEl.innerHTML = `<div class="col-span-2 p-5 bg-red-900/20 border border-red-800 rounded-lg text-red-300 text-center font-bold text-lg shadow-inner">❌ No item or boss found containing '${searchText}'.</div>`;
             } else {
                 foundMobs.forEach(mob => {
                     const btn = document.createElement("button");
@@ -343,7 +349,7 @@
                     
                     btn.innerHTML = `
                         <span class="font-bold text-gray-200 group-hover:text-white text-lg">${mob.Ancient}</span>
-                        <span class="rune-badge text-sm">${mob.Runes}</span>
+                        <span class="rune-badge text-sm shadow-sm">${mob.Runes}</span>
                     `;
                     mobListEl.appendChild(btn);
                 });
@@ -473,7 +479,7 @@
                                         armor: { items: aItems, runes: aKey ? aKey.split(',') : [] },
                                         artifact: { items: artItems, runes: artKey ? artKey.split(',') : [] },
                                         extraCount: extraRunesList.length,
-                                        extraStr: extraRunesList.length > 0 ? extraRunesList.join(", ") : "Yok",
+                                        extraStr: extraRunesList.length > 0 ? extraRunesList.join(", ") : "",
                                         totalItems: totalItems,
                                         providedRunesStr: combinedArr.join(", ")
                                     });
@@ -497,7 +503,7 @@
             container.innerHTML = "";
 
             if (combinations.length === 0) {
-                container.innerHTML = `<div class="p-6 bg-black/30 border border-gray-700 rounded-lg text-gray-400 text-center shadow-inner font-bold">❌ Bu rünleri sağlayabilen uygun bir kombinasyon bulunamadı.</div>`;
+                container.innerHTML = `<div class="p-6 bg-black/30 border border-gray-700 rounded-lg text-gray-400 text-center shadow-inner font-bold">❌ No suitable combination found to provide these runes.</div>`;
                 return;
             }
 
@@ -507,30 +513,30 @@
                 
                 let titleHtml = "";
                 if (index === 0) {
-                    titleHtml = `<span class="best-badge absolute -top-3 -left-3 shadow-lg text-xs tracking-wider px-3 py-1 rounded-sm">🥇 1. Seçenek - En İyi</span>`;
+                    titleHtml = `<span class="best-badge absolute -top-3 -left-3 shadow-lg text-xs tracking-wider px-3 py-1 rounded-sm">🥇 Option 1 - Best</span>`;
                     card.classList.add("best");
                 } else {
-                    titleHtml = `<span class="bg-gray-700 text-gray-300 font-bold px-3 py-1 rounded-sm text-xs absolute -top-3 -left-3 border border-gray-600 shadow">${index + 1}. Seçenek</span>`;
+                    titleHtml = `<span class="bg-gray-700 text-gray-300 font-bold px-3 py-1 rounded-sm text-xs absolute -top-3 -left-3 border border-gray-600 shadow">Option ${index + 1}</span>`;
                 }
 
                 let extraHtml = combo.extraCount === 0 
-                    ? `<span class="text-emerald-400 font-bold drop-shadow">Yok (Kusursuz)</span>` 
-                    : `<span class="text-red-400 font-bold drop-shadow">+${combo.extraCount} <span class="text-xs text-red-300 ml-1">(Fazla: ${combo.extraStr})</span></span>`;
+                    ? `<span class="text-emerald-400 font-bold drop-shadow">None (Perfect)</span>` 
+                    : `<span class="text-red-400 font-bold drop-shadow">+${combo.extraCount} <span class="text-xs text-red-300 ml-1">(Extra: ${combo.extraStr})</span></span>`;
 
                 let html = `
                     ${titleHtml}
                     <div class="flex flex-wrap justify-between items-center mb-5 mt-1 gap-2 text-sm border-b border-gray-700/60 pb-4">
-                        <div class="text-gray-400 font-medium">Kullanılan Eşya: <span class="text-white font-bold text-base ml-1">${combo.totalItems}</span></div>
-                        <div class="text-gray-400 font-medium">Hata Payı: <span class="ml-1">${extraHtml}</span></div>
-                        <div class="text-gray-400 font-medium w-full sm:w-auto">Sunağa Konan: <span class="font-mono text-gray-300 ml-1 font-bold">${combo.providedRunesStr}</span></div>
+                        <div class="text-gray-400 font-medium">Items Used: <span class="text-white font-bold text-base ml-1">${combo.totalItems}</span></div>
+                        <div class="text-gray-400 font-medium">Margin of Error: <span class="ml-1">${extraHtml}</span></div>
+                        <div class="text-gray-400 font-medium w-full sm:w-auto">Total Runes: <span class="font-mono text-gray-300 ml-1 font-bold">${combo.providedRunesStr}</span></div>
                     </div>
                     <div class="space-y-2">
                 `;
 
                 const categories = [
-                    { name: "YAKIN DÖVÜŞ", data: combo.melee },
-                    { name: "MENZİLLİ", data: combo.ranged },
-                    { name: "ZIRH", data: combo.armor },
+                    { name: "MELEE", data: combo.melee },
+                    { name: "RANGED", data: combo.ranged },
+                    { name: "ARMOR", data: combo.armor },
                     { name: "ARTIFACT", data: combo.artifact }
                 ];
 
